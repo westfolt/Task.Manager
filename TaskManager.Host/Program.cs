@@ -1,3 +1,8 @@
+using Autofac;
+using Autofac.Extensions.DependencyInjection;
+using TaskManager.Core;
+using TaskManager.Data;
+
 namespace TaskManager.Host
 {
     public class Program
@@ -6,16 +11,21 @@ namespace TaskManager.Host
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // Add services to the container.
-
             builder.Services.AddControllers();
-            // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
+            builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory());
+
+
+            builder.Host.ConfigureContainer<ContainerBuilder>(containerbuilder =>
+            {
+                containerbuilder.RegisterModule(new DataModule(builder.Configuration));
+                containerbuilder.RegisterModule(new CoreModule());
+            });
+
             var app = builder.Build();
 
-            // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
